@@ -1,176 +1,184 @@
-import React, {useEffect, useState} from 'react';
-import {FlatList, KeyboardAvoidingView, Platform, StyleSheet} from 'react-native';
-import {
-    ActivityIndicator,
-    Button,
-    Card,
-    Dialog,
-    FAB,
-    Portal,
-    Provider as PaperProvider,
-    Text,
-    TextInput
-} from 'react-native-paper';
-import {useRouter} from 'expo-router';
-import {ThemedView} from '@/components/ThemedView';
-import {ThemedText} from '@/components/ThemedText';
-import {useTodos} from '@/context/TodoContext';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import API_URL from '@/config/config';
-import Constants from "expo-constants/src/Constants";
+import React, { useState } from "react";
+import { View, FlatList, Text, StyleSheet, Image } from "react-native";
+import { Searchbar, Button, Appbar } from "react-native-paper";
 
-const TodosScreen = () => {
-    const {todos, fetchTodos} = useTodos();
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [isAdding, setIsAdding] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [dialogVisible, setDialogVisible] = useState(false);
-    const [dialogMessage, setDialogMessage] = useState('');
-    const router = useRouter();
+const DashboardScreen = () => {
+  const [searchQuery, setSearchQuery] = useState("");
 
-    useEffect(() => {
-        const loadTodos = async () => {
-            setLoading(true);
-            await fetchTodos();
-            setLoading(false);
-        };
-        loadTodos();
-    }, []);
+  const onChangeSearch = (query) => setSearchQuery(query);
 
-    const handleAddTodo = async () => {
-        if (!title || !description) {
-            setDialogMessage('Both title and description are required.');
-            setDialogVisible(true);
-            return;
-        }
-        try {
-            const token = await AsyncStorage.getItem('token');
-            await axios.post(`${API_URL}/api/todos`, {
-                title,
-                description
-            }, {headers: {Authorization: `Bearer ${token}`}});
-            fetchTodos();
-            setTitle('');
-            setDescription('');
-            setIsAdding(false);
-        } catch (error) {
-            setDialogMessage('Failed to add todo');
-            setDialogVisible(true);
-        }
-    };
+  const cars = [
+    {
+      id: "1",
+      title: "Toyota Camry",
+      price: "$24,425",
+      category: "Honda",
+      image:
+        "https://i.pinimg.com/736x/8a/de/23/8ade234a1519b634739bd6d4f49edaf9.jpg",
+    },
+    {
+      id: "2",
+      title: "BMW X5",
+      price: "$26,120",
+      category: "BMW",
+      image:
+        "https://i.pinimg.com/736x/df/a1/ab/dfa1abbf4929054c2325b555315acd75.jpg",
+    },
+    {
+      id: "3",
+      title: "Lamborghini Huracán",
+      price: "$28,940",
+      category: "Sport",
+      image:
+        "https://i.pinimg.com/736x/65/44/a8/6544a8858e304cf22051c35a5856f06a.jpg",
+    },
+    {
+      id: "4",
+      title: "Alphard",
+      price: "$22,140",
+      category: "Honda",
+      image:
+        "https://i.pinimg.com/736x/27/4b/b8/274bb86d3db1f9da6f9a21d3ebbfd6ee.jpg",
+    },
+    {
+      id: "5",
+      title: "HR-V",
+      price: "$22,140",
+      category: "Honda",
+      image:
+        "https://i.pinimg.com/736x/0e/98/15/0e98158075f06446d0307327db353e8d.jpg",
+    },
+    {
+      id: "6",
+      title: "Gallardo",
+      price: "$22,140",
+      category: "Honda",
+      image:
+        "https://i.pinimg.com/736x/1b/78/34/1b7834ac857b41b0227eff058200dda3.jpg",
+    },
+    {
+      id: "7",
+      title: "Tesla",
+      price: "$22,140",
+      category: "Honda",
+      image:
+        "https://i.pinimg.com/736x/f1/88/83/f1888330dc3c21616b9381f6cbbba8be.jpg",
+    },
+    {
+      id: "8",
+      title: "Toyota Fortuner",
+      price: "$22,140",
+      category: "Honda",
+      image:
+        "https://i.pinimg.com/736x/3d/5b/84/3d5b84f5f4130db35984447a6a48bc77.jpg",
+    },
+    {
+      id: "9",
+      title: "Supra MK4",
+      price: "$22,140",
+      category: "Honda",
+      image:
+        "https://i.pinimg.com/736x/96/50/e0/9650e05979e6d65e8cf1cd806c5e94e3.jpg",
+    },
+    {
+      id: "10",
+      title: "Mazda RX7",
+      price: "$22,140",
+      category: "Honda",
+      image:
+        "https://i.pinimg.com/736x/10/ca/04/10ca04899df806effc417ebeeb919ac9.jpg",
+    },
+  ];
 
-    const handleDeleteTodo = async (id: string) => {
-        try {
-            const token = await AsyncStorage.getItem('token');
-            await axios.delete(`${API_URL}/api/todos/${id}`, {headers: {Authorization: `Bearer ${token}`}});
-            fetchTodos();
-        } catch (error) {
-            setDialogMessage('Failed to delete todo');
-            setDialogVisible(true);
-        }
-    };
+  const filteredCars = cars.filter((car) =>
+    car.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-    return (
-        <PaperProvider>
-            <ThemedView style={styles.container}>
-                <ThemedText style={styles.title} type="title">ToDo List</ThemedText>
-                {loading ? (
-                    <ActivityIndicator style={styles.loading} animating={true}/>
-                ) : (
-                    <FlatList
-                        data={todos}
-                        keyExtractor={(item) => item._id}
-                        renderItem={({item}) => (
-                            <Card style={styles.card} elevation={3} onPress={() => router.push(`../todo/${item._id}`)}>
-                                <Card.Content>
-                                    <Text variant="titleMedium">{item.title}</Text>
-                                    <Text variant="bodyMedium" style={styles.description}>{item.description}</Text>
-                                </Card.Content>
-                                <Card.Actions>
-                                    <Button onPress={() => handleDeleteTodo(item._id)}>Delete</Button>
-                                </Card.Actions>
-                            </Card>
-                        )}
-                        contentContainerStyle={styles.listContainer}
-                    />
-                )}
-                {isAdding && (
-                    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                                          style={styles.inputContainer}>
-                        <TextInput label="Title" value={title} onChangeText={setTitle} style={styles.input}
-                                   mode="outlined"/>
-                        <TextInput label="Description" value={description} onChangeText={setDescription}
-                                   style={styles.input} mode="outlined" multiline/>
-                        <Button mode="contained" onPress={handleAddTodo} style={styles.addButton}>Add Todo</Button>
-                        <Button onPress={() => setIsAdding(false)} style={styles.cancelButton}>Cancel</Button>
-                    </KeyboardAvoidingView>
-                )}
-                {!isAdding && (
-                    <FAB style={styles.fab} icon="plus" onPress={() => setIsAdding(true)} label="Add Todo"/>
-                )}
-                <Portal>
-                    <Dialog visible={dialogVisible} onDismiss={() => setDialogVisible(false)}>
-                        <Dialog.Title>Alert</Dialog.Title>
-                        <Dialog.Content>
-                            <Text>{dialogMessage}</Text>
-                        </Dialog.Content>
-                        <Dialog.Actions>
-                            <Button onPress={() => setDialogVisible(false)}>OK</Button>
-                        </Dialog.Actions>
-                    </Dialog>
-                </Portal>
-            </ThemedView>
-        </PaperProvider>
-    );
+  const renderCar = ({ item }) => (
+    <View style={styles.productCard}>
+      <Image source={{ uri: item.image }} style={styles.productImage} />
+      <Text style={styles.productTitle}>{item.title}</Text>
+      <Text style={styles.productPrice}>{item.price}</Text>
+      <Button mode="contained" style={styles.productButton}>
+        Detail
+      </Button>
+    </View>
+  );
+
+  return (
+    <View style={styles.container}>
+      <Appbar.Header style={styles.header}>
+        <Appbar.Content title="Cars" />
+      </Appbar.Header>
+
+      <Searchbar
+        placeholder="Cari mobil..."
+        onChangeText={onChangeSearch}
+        value={searchQuery}
+        style={styles.searchbar}
+      />
+
+      <FlatList
+        data={filteredCars}
+        renderItem={renderCar}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        columnWrapperStyle={styles.productList}
+        contentContainerStyle={styles.productListContainer}
+      />
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        paddingTop: Constants.statusBarHeight,
-    },
-    title: {
-        marginTop: 16,
-        marginHorizontal: 16,
-    },
-    listContainer: {
-        padding: 16,
-    },
-    card: {
-        marginBottom: 16,
-        borderRadius: 8,
-    },
-    description: {
-        marginTop: 8,
-        color: 'gray',
-    },
-    fab: {
-        position: 'absolute',
-        right: 16,
-        bottom: 16,
-    },
-    inputContainer: {
-        padding: 16,
-        borderTopLeftRadius: 16,
-        borderTopRightRadius: 16,
-        elevation: 5,
-    },
-    input: {
-        marginBottom: 12,
-    },
-    addButton: {
-        marginTop: 12,
-    },
-    cancelButton: {
-        marginTop: 8,
-    },
-    loading: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
+  header: {
+    backgroundColor: "#6200ea",
+  },
+  searchbar: {
+    margin: 16,
+    borderRadius: 20,
+    elevation: 5,
+  },
+  productList: {
+    justifyContent: "space-between",
+  },
+  productListContainer: {
+    padding: 16,
+  },
+  productCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    alignItems: "center",
+    flex: 1,
+    marginHorizontal: 8,
+    elevation: 3,
+  },
+  productImage: {
+    width: 120,
+    height: 120,
+    marginBottom: 8,
+    borderRadius: 8,
+  },
+  productTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  productPrice: {
+    marginTop: 4,
+    color: "#888",
+  },
+  productButton: {
+    marginTop: 8,
+    width: "100%",
+    borderRadius: 20,
+  },
 });
 
-export default TodosScreen;
+export default DashboardScreen;
